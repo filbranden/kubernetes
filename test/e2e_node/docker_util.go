@@ -107,6 +107,23 @@ func getDockerLoggingDriver() (string, error) {
 	return info.LoggingDriver, nil
 }
 
+// getDockerStorageDriver returns the name of the storage driver.
+//
+// Please note that info.Driver is actually more complicated than that, since
+// it is possible that there are multiple stores, in which case it will return
+// a string such as:
+//   "overlay2 (store1) devicemapper (store2)"
+//
+// For the case where a single store is in use, it will simply return it:
+//   "overlay2"
+func getDockerStorageDriver() (string, error) {
+	info, err := getDockerInfo()
+	if err != nil {
+		return "", err
+	}
+	return info.Driver, nil
+}
+
 // isDockerSELinuxSupportEnabled checks whether the Docker daemon was started
 // with SELinux support enabled.
 func isDockerSELinuxSupportEnabled() (bool, error) {

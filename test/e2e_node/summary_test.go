@@ -140,6 +140,13 @@ var _ = framework.KubeDescribe("Summary API", func() {
 				})
 				systemContainers["misc"] = miscContExpectations
 			}
+			fsUsedBounds := bounded(framework.Kb, 10*framework.Mb)
+			if framework.TestContext.ContainerRuntime == "docker" {
+				if driver, _ := getDockerStorageDriver(); driver == "devicemapper" {
+					framework.Logf("Running docker with 'devicemapper' storage driver, so can't get any disk usage statistics.")
+					fsUsedBounds = bounded(0, 0)
+				}
+			}
 			// Expectations for pods.
 			podExpectations := gstruct.MatchAllFields(gstruct.Fields{
 				"PodRef":    gstruct.Ignore(),
@@ -167,7 +174,7 @@ var _ = framework.KubeDescribe("Summary API", func() {
 							"Time":           recent(maxStatsAge),
 							"AvailableBytes": fsCapacityBounds,
 							"CapacityBytes":  fsCapacityBounds,
-							"UsedBytes":      bounded(framework.Kb, 10*framework.Mb),
+							"UsedBytes":      fsUsedBounds,
 							"InodesFree":     bounded(1E4, 1E8),
 							"Inodes":         bounded(1E4, 1E8),
 							"InodesUsed":     bounded(0, 1E8),
@@ -176,7 +183,7 @@ var _ = framework.KubeDescribe("Summary API", func() {
 							"Time":           recent(maxStatsAge),
 							"AvailableBytes": fsCapacityBounds,
 							"CapacityBytes":  fsCapacityBounds,
-							"UsedBytes":      bounded(framework.Kb, 10*framework.Mb),
+							"UsedBytes":      fsUsedBounds,
 							"InodesFree":     bounded(1E4, 1E8),
 							"Inodes":         bounded(1E4, 1E8),
 							"InodesUsed":     bounded(0, 1E8),
