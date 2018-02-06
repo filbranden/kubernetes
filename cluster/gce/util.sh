@@ -25,7 +25,7 @@ source "${KUBE_ROOT}/cluster/gce/${KUBE_CONFIG_FILE-"config-default.sh"}"
 source "${KUBE_ROOT}/cluster/common.sh"
 source "${KUBE_ROOT}/hack/lib/util.sh"
 
-if [[ "${NODE_OS_DISTRIBUTION}" == "gci" || "${NODE_OS_DISTRIBUTION}" == "ubuntu" ]]; then
+if [[ "${NODE_OS_DISTRIBUTION}" == "gci" || "${NODE_OS_DISTRIBUTION}" == "ubuntu" || "${NODE_OS_DISTRIBUTION}" == "centos" ]]; then
   source "${KUBE_ROOT}/cluster/gce/${NODE_OS_DISTRIBUTION}/node-helper.sh"
 else
   echo "Cannot operate on cluster using node os distro: ${NODE_OS_DISTRIBUTION}" >&2
@@ -68,6 +68,9 @@ function set-node-image() {
         # Otherwise, we respect whatever is set by the user.
         NODE_IMAGE=${KUBE_GCE_NODE_IMAGE:-${GCI_VERSION}}
         NODE_IMAGE_PROJECT=${KUBE_GCE_NODE_PROJECT:-${DEFAULT_GCI_PROJECT}}
+    elif [[ "${NODE_OS_DISTRIBUTION}" == "centos" ]]; then
+        NODE_IMAGE=filbranden-centos-gke-3
+        NODE_IMAGE_PROJECT=filbranden-cloud
     fi
 }
 
@@ -748,7 +751,7 @@ TERMINATED_POD_GC_THRESHOLD: $(yaml-quote ${TERMINATED_POD_GC_THRESHOLD})
 EOF
   fi
   if [[ "${master}" == "true" && ("${MASTER_OS_DISTRIBUTION}" == "trusty" || "${MASTER_OS_DISTRIBUTION}" == "gci") || "${MASTER_OS_DISTRIBUTION}" == "ubuntu" ]] || \
-     [[ "${master}" == "false" && ("${NODE_OS_DISTRIBUTION}" == "trusty" || "${NODE_OS_DISTRIBUTION}" == "gci") || "${NODE_OS_DISTRIBUTION}" = "ubuntu" ]] ; then
+     [[ "${master}" == "false" && ("${NODE_OS_DISTRIBUTION}" == "trusty" || "${NODE_OS_DISTRIBUTION}" == "gci") || "${NODE_OS_DISTRIBUTION}" = "ubuntu" || "${NODE_OS_DISTRIBUTION}" == "centos" ]] ; then
     cat >>$file <<EOF
 KUBE_MANIFESTS_TAR_URL: $(yaml-quote ${kube_manifests_tar_url})
 KUBE_MANIFESTS_TAR_HASH: $(yaml-quote ${KUBE_MANIFESTS_TAR_HASH})
