@@ -37,6 +37,9 @@ spec:
           readOnly: true
         - name: config-volume
           mountPath: /etc/google-fluentd/config.d
+        # Needs to be privileged to be able to access /var/log on distributions
+        # with SELinux support.
+        privileged: true
         # Liveness probe is aimed to help in situarions where fluentd
         # silently hangs for no apparent reasons until manual restart.
         # The idea of this probe is that if fluentd is not queueing or
