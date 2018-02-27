@@ -21,6 +21,7 @@ package kubectl
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -397,7 +398,7 @@ func doTestOverWebSockets(bindAddress string, f *framework.Framework) {
 	defer ws.Close()
 
 	Eventually(func() error {
-		channel, msg, err := wsRead(ws)
+		channel, msg, err := wsReadWithTimeout(ws, time.Minute)
 		if err != nil {
 			return fmt.Errorf("Failed to read completely from websocket %s: %v", url.String(), err)
 		}
@@ -411,7 +412,7 @@ func doTestOverWebSockets(bindAddress string, f *framework.Framework) {
 	}, time.Minute, 10*time.Second).Should(BeNil())
 
 	Eventually(func() error {
-		channel, msg, err := wsRead(ws)
+		channel, msg, err := wsReadWithTimeout(ws, time.Minute)
 		if err != nil {
 			return fmt.Errorf("Failed to read completely from websocket %s: %v", url.String(), err)
 		}
@@ -434,7 +435,7 @@ func doTestOverWebSockets(bindAddress string, f *framework.Framework) {
 	buf := bytes.Buffer{}
 	expectedData := bytes.Repeat([]byte("x"), 100)
 	Eventually(func() error {
-		channel, msg, err := wsRead(ws)
+		channel, msg, err := wsReadWithTimeout(ws, time.Minute)
 		if err != nil {
 			return fmt.Errorf("Failed to read completely from websocket %s: %v", url.String(), err)
 		}
@@ -532,6 +533,24 @@ func wsRead(conn *websocket.Conn) (byte, []byte, error) {
 
 		return channel, data, err
 	}
+}
+
+func wsReadWithTimeout(conn *websocket.Conn, timeout time.Duration) (byte, []byte, error) {
+	var channel byte
+	var data []byte
+	var err error
+	finished := make(chan struct{})
+	go func() {
+		channel, data, err = wsRead(conn)
+		finished <- struct{}{}
+	}()
+	select {
+	case <-time.After(timeout):
+		err = errors.New("timed out waiting to read data from websocket")
+	case <-finished:
+		// All done.
+	}
+	return channel, data, err
 }
 
 func wsWrite(conn *websocket.Conn, channel byte, data []byte) error {
