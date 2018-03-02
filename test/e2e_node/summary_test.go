@@ -81,7 +81,7 @@ var _ = framework.KubeDescribe("Summary API", func() {
 			memoryLimit := memoryCapacity.Value()
 			fsCapacityBounds := bounded(100*framework.Mb, 10*framework.Tb)
 			// Expectations for system containers.
-			sysContExpectations := func(possiblyNilCpuMemStats bool) types.GomegaMatcher {
+			sysContExpectations := func() types.GomegaMatcher {
 				cpuStats := ptrMatchAllFields(gstruct.Fields{
 					"Time":                 recent(maxStatsAge),
 					"UsageNanoCores":       bounded(10000, 2E9),
@@ -98,10 +98,6 @@ var _ = framework.KubeDescribe("Summary API", func() {
 					"PageFaults":      bounded(1000, 1E9),
 					"MajorPageFaults": bounded(0, 100000),
 				})
-				if possiblyNilCpuMemStats {
-					cpuStats = Or(BeNil(), cpuStats)
-					memStats = Or(BeNil(), memStats)
-				}
 				return gstruct.MatchAllFields(gstruct.Fields{
 					"Name":               gstruct.Ignore(),
 					"StartTime":          recent(maxStartAge),
@@ -124,15 +120,19 @@ var _ = framework.KubeDescribe("Summary API", func() {
 				"PageFaults":      bounded(0, 1000000),
 				"MajorPageFaults": bounded(0, 10),
 			})
+			runtimeContExpectations := sysContExpectations().(*gstruct.FieldsMatcher)
+			// If Delegate=yes is not present in systemd unit...
+			runtimeContExpectations.Fields["Memory"] = Or(BeNil(), runtimeContExpectations.Fields["Memory"])
+			runtimeContExpectations.Fields["CPU"] = Or(BeNil(), runtimeContExpectations.Fields["CPU"])
 			systemContainers := gstruct.Elements{
-				"kubelet": sysContExpectations(false),
-				"runtime": sysContExpectations(true),
+				"kubelet": sysContExpectations(),
+				"runtime": runtimeContExpectations,
 				"pods":    podsContExpectations,
 			}
 			// The Kubelet only manages the 'misc' system container if the host is not running systemd.
 			if !systemdutil.IsRunningSystemd() {
 				framework.Logf("Host not running systemd; expecting 'misc' system container.")
-				miscContExpectations := sysContExpectations(false).(*gstruct.FieldsMatcher)
+				miscContExpectations := sysContExpectations().(*gstruct.FieldsMatcher)
 				// Misc processes are system-dependent, so relax the memory constraints.
 				miscContExpectations.Fields["Memory"] = ptrMatchAllFields(gstruct.Fields{
 					"Time": recent(maxStatsAge),
