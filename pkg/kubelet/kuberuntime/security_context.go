@@ -102,8 +102,9 @@ func convertToRuntimeSecurityContext(securityContext *v1.SecurityContext) *runti
 	}
 
 	sc := &runtimeapi.LinuxContainerSecurityContext{
-		Capabilities:   convertToRuntimeCapabilities(securityContext.Capabilities),
-		SelinuxOptions: convertToRuntimeSELinuxOption(securityContext.SELinuxOptions),
+		Capabilities:     convertToRuntimeCapabilities(securityContext.Capabilities),
+		UserCapabilities: convertToRuntimeCapabilities(securityContext.UserCapabilities),
+		SelinuxOptions:   convertToRuntimeSELinuxOption(securityContext.SELinuxOptions),
 	}
 	if securityContext.RunAsUser != nil {
 		sc.RunAsUser = &runtimeapi.Int64Value{Value: int64(*securityContext.RunAsUser)}

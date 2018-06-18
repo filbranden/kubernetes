@@ -4540,6 +4540,10 @@ type SecurityContext struct {
 	// Defaults to the default set of capabilities granted by the container runtime.
 	// +optional
 	Capabilities *Capabilities
+	// The capabilities to add when running containers under a non-root user.
+	// Defaults to an empty set of capabilities.
+	// +optional
+	UserCapabilities *Capabilities
 	// Run container in privileged mode.
 	// Processes in privileged containers are essentially equivalent to root on the host.
 	// Defaults to false.

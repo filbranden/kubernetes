@@ -530,6 +530,8 @@ message Capability {
 message LinuxContainerSecurityContext {
     // Capabilities to add or drop.
     Capability capabilities = 1;
+    // Capabilities to add when running as non-root.
+    Capability user_capabilities = 13;
     // If set, run container in privileged mode.
     // Privileged mode is incompatible with the following options. If
     // privileged is set, the following features MAY have no effect:
