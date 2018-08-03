@@ -1,0 +1,8 @@
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+cgroupRoot: "/"
+clusterDns: ""
+clusterDomain: ""
+authentication:
+  x509:
+    clientCAFile: "/etc/kubernetes/pki/ca-cert.crt"

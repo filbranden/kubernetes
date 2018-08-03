@@ -50,22 +50,6 @@ deb_data(
 )
 
 deb_data(
-    name = "kubelet",
-    data = [
-        {
-            "files": ["//cmd/kubelet"],
-            "mode": "0755",
-            "dir": "/usr/bin",
-        },
-        {
-            "files": ["kubelet.service"],
-            "mode": "644",
-            "dir": "/lib/systemd/system",
-        },
-    ],
-)
-
-deb_data(
     name = "kubeadm",
     data = [
         {
@@ -135,8 +119,36 @@ k8s_deb(
     version_file = "//build:os_package_version",
 )
 
+deb_data(
+    name = "kubelet",
+    data = [
+        {
+            "files": ["//cmd/kubelet"],
+            "mode": "0755",
+            "dir": "/usr/bin/",
+        },
+        {
+            "files": ["kubelet.service"],
+            "mode": "0644",
+            "dir": "/lib/systemd/system/",
+        },
+        {
+            "files": [
+                "kubelet-config.yaml",
+                "kubelet.env",
+            ],
+            "mode": "0644",
+            "dir": "/etc/kubernetes/",
+        },
+    ],
+)
+
 k8s_deb(
     name = "kubelet",
+    conffiles = [
+        "/etc/kubernetes/kubelet-config.yaml",
+        "/etc/kubernetes/kubelet.env",
+    ],
     depends = [
         "iptables (>= 1.4.21)",
         "kubernetes-cni (>= 0.5.1)",

@@ -3,7 +3,13 @@ Description=kubelet: The Kubernetes Node Agent
 Documentation=http://kubernetes.io/docs/
 
 [Service]
-ExecStart=/usr/bin/kubelet
+EnvironmentFile=-/etc/kubernetes/kubelet.env
+ExecStart=/usr/bin/kubelet --v=2 --allow-privileged=true \
+    --config=/etc/kubernetes/kubelet-config.yaml \
+    --bootstrap-kubeconfig=/etc/kubernetes/bootstrap.config \
+    --kubeconfig=/etc/kubernetes/kubecfg \
+    --network-plugin=cni --cni-bin-dir=/opt/cni/bin \
+    $KUBELET_OPTIONS
 Restart=always
 StartLimitInterval=0
 RestartSec=10
